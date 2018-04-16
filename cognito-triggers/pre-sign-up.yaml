@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Pre sign up trigger
+
+  Lambda function that restricts Cognito to a whitelist of email domains
+
+  '
+Resources:
+  CognitoValidateEmailAddressDomain:
+    Properties:
+      CodeUri: s3://ianduffy-identity-lambda-functions/8a71abfd176ef362e103228988a6085f
+      Description: Lambda function that restricts Cognito to a whitelist of email
+        domains
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs8.10
+      Timeout: 5
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
