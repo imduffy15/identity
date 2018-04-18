@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'users-api
+
+  Returns information about the given email address
+
+  '
+Globals:
+  Function:
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Type: AllAtOnce
+    Timeout: 25
+Resources:
+  ApiGateway:
+    Properties:
+      DefinitionBody:
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /user/{uid}:
+            get:
+              responses: {}
+              security:
+              - cognito: []
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                passthroughBehavior: when_no_match
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserFunction.Arn}/invocations
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Methods: '''DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    statusCode: 200
+                type: mock
+        securityDefinitions:
+          cognito:
+            in: header
+            name: Authorization
+            type: apiKey
+            x-amazon-apigateway-authorizer:
+              providerARNs:
+              - arn:aws:cognito-idp:eu-west-1:136798402868:userpool/eu-west-1_FP7UfClGn
+              type: cognito_user_pools
+            x-amazon-apigateway-authtype: cognito_user_pools
+        swagger: '2.0'
+      StageName: prod
+    Type: AWS::Serverless::Api
+  UserFunction:
+    Properties:
+      CodeUri: s3://ianduffy-identity-lambda-functions/23d8883e75ee95023ec64027a4b5ec27
+      Environment:
+        Variables:
+          client_secret: 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
+      Events:
+        Api:
+          Properties:
+            Method: GET
+            Path: /user/{uid}
+            RestApiId:
+              Ref: ApiGateway
+          Type: Api
+      Handler: app.lambda_handler
+      Policies:
+      - Statement:
+        - Action:
+          - kms:Decrypt
+          Effect: Allow
+          Resource: arn:aws:kms:eu-west-1:136798402868:key/3a748884-aeaa-4e6b-a62d-c8144bde0fa9
+        Version: '2012-10-17'
+      Runtime: python3.6
+      Timeout: 10
+      Tracing: Active
+    Type: AWS::Serverless::Function
+  UserFunctionInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - UserFunction
+        - Arn
+      Principal: apigateway.amazonaws.com
+    Type: AWS::Lambda::Permission
+Transform: AWS::Serverless-2016-10-31
